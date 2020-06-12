@@ -67,7 +67,7 @@ while stop==0
             [~,index] = min(E(j,i,:));
             
             K(j,i) = index; % 在地图上标记机器人编号
-            rolesArray(k).taskAmount = rolesArray(k).taskAmount +1; % 任务量加1
+            rolesArray(index).taskAmount = rolesArray(index).taskAmount +1; % 任务量加1
         end
     end
     
