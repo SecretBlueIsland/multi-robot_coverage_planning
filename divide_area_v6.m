@@ -80,23 +80,16 @@ while stop==0
     % obtain the assignment matrix for every robot    
     for k=1:robot_num
        K_r = zeros(W,L);
-       K_t = K - k;
-       for i=1:L
-           for j=1:W
-               if K_t(j,i)==0
-                   K_r(j,i) = 1;
-               else
-                   K_r(j,i) = 0;
-               end
-           end
-       end
-       eval(['K',num2str(k),'=','K_r',';']); % 每个机器人的区域
+       K_r(K==k)=1;
+       rolesArray(k).taskDetail = K_r; % 每个机器人的区域
+
     end
     % obtain the connected sets for every robot
     for k=1:robot_num
         CON_t = [];        
         DCON_t = [];
-        eval(['K_t','=','K',num2str(k),';']);
+        
+        K_t = rolesArray(k).taskDetail;
         for i=1:L
             for j=1:W
                 if K(j,i)~=k
@@ -117,13 +110,15 @@ while stop==0
                 end
             end
         end
-        eval(['CON',num2str(k),'=','CON_t',';']);
-        eval(['DCON',num2str(k),'=','DCON_t',';']);
+        rolesArray(k).CON = CON_t;
+        rolesArray(k).DCON = DCON_t;
+        
     end
     
     for k=1:robot_num
-       eval(['CON_t','=','CON',num2str(k),';']);
-       eval(['DCON_t','=','DCON',num2str(k),';']);
+       CON_t = rolesArray(k).CON; 
+       DCON_t = rolesArray(k).DCON; 
+       
        C0 = zeros(W,L);
        if size(DCON_t,1)==0 || size(CON_t,1)==0
            C(:,:,k) = 1;
@@ -133,12 +128,12 @@ while stop==0
                   
                    dist_con = sqrt(sum((CON_t-[j;i]).^2));
                    dist_dcon = sqrt(sum((DCON_t-[j;i]).^2));
-                   mdist_con = min(dist_con);
-                   mdist_dcon = min(dist_dcon);
+                   mdist_con = min(dist_con);   % 方格离R的距离
+                   mdist_dcon = min(dist_dcon); % 方格离Q的距离
                    if mdist_con==0
-                       C(j,i,k) = 1;
+                       C(j,i,k) = 1;            % 奖励离R近的方格，让他更近
                    elseif mdist_dcon==0
-                       C(j,i,k) = 1.3;
+                       C(j,i,k) = 1.3;          % 惩罚离Q近的方格，让他更远
                    else
                        C(j,i,k) = 0.3*mdist_con/(mdist_con+mdist_dcon)+1;
                    end                   
@@ -149,34 +144,34 @@ while stop==0
     end
     %% recalcuate S
     for k=1:robot_num
-        eval(['DCON_t','=','DCON',num2str(k),';']);
-        rolesArray(k).taskAmount = rolesArray(k).taskAmount - size(DCON_t,1);
+        DCON_t = rolesArray(k).DCON; 
+        rolesArray(k).taskAmount = rolesArray(k).taskAmount - size(DCON_t,1); % 减去非连通区域的数量
     end
     
     
     %% update alpha
-    %dm = zeros(1,robot_num);
-    dm = [rolesArray.taskAmount] - (F-ob)/robot_num;
-    threshold = W*L/30;
+    
+    dm = [rolesArray.taskAmount] - (F-ob)/robot_num; % 任务量与平均任务量的偏差
+    threshold = W*L/30;                              % 判断阈值
     if iteration_count>100
-        threshold = threshold*(iteration_count/50)^2;
+        threshold = threshold*(iteration_count/50)^2; % 阈值增大
     end
     for k=1:robot_num
-       if dm(k) > threshold || dm(k) < -threshold
-          alpha(k) = alpha(k)+0.002*dm(k);
+       if abs(dm(k)) > threshold    % 偏差超过阈值
+          alpha(k) = alpha(k)+0.002*dm(k); % 这个0.002就是论文里公式（11）的小写c
        else
-           count = count + 1;
+           count = count + 1; % 这个机器人的任务区域满足要求
        end
     end
     
     stop1 = 0;
-    if count == robot_num
+    if count == robot_num  % 所有机器人的任务区域都满足了要求
         stop1 = 1;
     end
     stop2 = 1;
     for k=1:robot_num
-        eval(['DCON_t','=','DCON',num2str(k),';']);
-        if size(DCON_t,1)~=0
+        DCON_t = rolesArray(k).DCON; 
+        if size(DCON_t,1)~=0 % 还有非连通区域没搞完
             stop2 = 0;
             continue;
         end
