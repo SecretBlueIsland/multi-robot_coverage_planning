@@ -16,8 +16,14 @@ W = size(Core_flag,1); %width = rols = y
 initK = zeros(W,L);
 %display_area(Area_flag,1);
 %绘制初始任务分配情况
+ob=0;
 for i=1:L
     for j=1:W
+        if Core_flag(j,i)==-1
+            ob = ob + 1;
+            continue;
+        end
+
         E = zeros(1,robot_num);
         for k=1:robot_num
             E(k) = norm([i,j] - rolesArray(k).coord);
@@ -26,9 +32,9 @@ for i=1:L
         initK(j,i) = index;  % 在地图上标记机器人编号       
     end
 end
-figure(2);
-display_area(initK,robot_num,2);
-pause();
+%figure(2);
+%display_area(initK,robot_num,2);
+%pause();
 
 %% main loop
 
@@ -73,8 +79,8 @@ while stop==0
     
     %% show image
     Area_rst = K;
-    figure(2);
-    handle2 = display_area(Area_rst,robot_num,2);
+    %figure(2);
+    %handle2 = display_area(Area_rst,robot_num,2);
     
     %% update c
     % obtain the assignment matrix for every robot    
@@ -89,13 +95,13 @@ while stop==0
         CON_t = [];        
         DCON_t = [];
         
-        K_t = rolesArray(k).taskDetail;
+        %K_t = rolesArray(k).taskDetail;
         for i=1:L
             for j=1:W
                 if K(j,i)~=k
                    continue; 
                 end
-                if isconnect(j,i,K_t,(rolesArray(k).coord)')==1
+                if isconnect_v6(j,i,rolesArray(k))==1
                    if size(CON_t)==0
                        CON_t = [j;i];
                    else
@@ -180,7 +186,9 @@ while stop==0
         stop = 1;
     end
     
-    
+  if mod(iteration_count,50) == 0
+      disp(iteration_count);
+  end
     %K
     %dm
     %count
@@ -189,7 +197,8 @@ end
 %K = K/10;
 %colormap([0 0 0;rand(robot_num,3)]);
 %pcolor(1:L,1:W,K);
-
+figure(2)
+handle2 = display_area(Area_rst,robot_num,2);
 
 end
 

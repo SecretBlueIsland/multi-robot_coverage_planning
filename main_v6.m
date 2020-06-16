@@ -1,5 +1,5 @@
 ROBOT_NUM = 4;
-LENGTH = 20; %must be even
+LENGTH = 30; %must be even
 
 rng(40 ,'twister');%24 17
 %4-20: 36 32 21 20? 18? 16 15 9? 8?
@@ -11,6 +11,23 @@ rng(40 ,'twister');%24 17
 %core(core>den) = 1;
 %core(core<den) = 0;
 core = ones(LENGTH/2,LENGTH/2);
+
+core([8 9 15],1) = 0;
+core([5 7 10],2) = 0;
+core([2 6],3) = 0;
+core([13 15],4) = 0;
+core([3 9 12],5) = 0;
+core(6,6) = 0;
+core([9 15],7) = 0;
+core([1 13],8) = 0;
+core(13,9) = 0;
+core([4 11],10) = 0;
+core([4 10],11) = 0;
+core(4,12) = 0;
+core([8 12 15],13) = 0;
+core([6 11],14) = 0;
+core(3,15) = 0;
+
 kn = ones(2,2);
 area = kron(core,kn);
 
