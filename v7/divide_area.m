@@ -101,7 +101,7 @@ while stop==0
                 if K(j,i)~=k
                    continue; 
                 end
-                if isconnect_v6([j;i],rolesArray(k))==1
+                if isconnect([j;i],rolesArray(k))==1
                    if size(CON_t)==0
                        CON_t = [j;i];
                    else
@@ -134,8 +134,14 @@ while stop==0
                   
                    dist_con = sqrt(sum((CON_t-[j;i]).^2));
                    dist_dcon = sqrt(sum((DCON_t-[j;i]).^2));
-                   mdist_con = min(dist_con);   % 方格离R的距离
-                   mdist_dcon = min(dist_dcon); % 方格离Q的距离
+                   [mdist_con,IR] = min(dist_con);   % 方格离R的距离
+                   [mdist_dcon,IQ] = min(dist_dcon); % 方格离Q的距离
+                   
+                   %disp(CON_t(:,IR))
+                   %disp(DCON_t(:,IQ))
+                   
+                   
+                   
                    if mdist_con==0
                        C(j,i,k) = 1;            % 奖励离R近的方格，让他更近
                    elseif mdist_dcon==0
